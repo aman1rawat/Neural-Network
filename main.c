@@ -15,7 +15,7 @@ void LayerInfo(Layer *t){
         printMatrix(t->pre_activation_neuron);
         printf("Layer post activation : \n");
         printMatrix(t->neuron);
-        printf("\n----------------------------------\n");
+        printf("\n-----------------------------------\n");
         t=t->next;
     }
 }
