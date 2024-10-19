@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "./header_files/NeuralNetwork.h"
-#include "./header_files/utilities.h"
+#include "NN.h"
+#include "utilities.h"
 
 #define lr 0.01
 
