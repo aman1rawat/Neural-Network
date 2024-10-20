@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+
 #include "NN.h"
 #include "utilities.h"
 
@@ -60,12 +61,16 @@ int main() {
     //     }
     // }
     printf("Layers created\n");
-    for(int i=0;i<1;i++){
+    for(int i=0;i<4;i++){
         printf("\n-----------------iteration %d------------------\n", i);
         trainNetwork(net, input[i], output[i], lr);
         Layer *t = net->layers;
         LayerInfo(t);
     }
+    predict(net, input[0]);
+    predict(net, input[1]);
+    predict(net, input[2]);
+    predict(net, input[3]);
 
 }
 

@@ -1,5 +1,5 @@
 #include "utilities.h"
-#include "NeuralNetwork.h"
+#include "NN.h"
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
@@ -32,13 +32,15 @@ void addLayer(NeuralNet *net, int size, char *activation) {
     // Initialize the new layer
     layer->size = size;
     layer->activation = activation;
-    layer->next = NULL;
-    layer->prev = NULL;  // Explicitly initialize prev
     layer->bias = createMatrix(layer->size, 1);
     layer->neuron = createMatrix(layer->size, 1);
-    layer->pre_activation_neuron = createMatrix(layer->size, 1);
+    layer->next = NULL;
+    layer->prev = NULL; 
+    layer->activation_gradient_neuron = NULL;
+    layer->pre_activation_neuron = NULL;
     layer->weight_gradient = NULL;
     layer->bias_gradient = NULL;
+    layer->error = NULL;
 
     if (!net->layers) {
         layer->weight = createMatrix(layer->size, net->input_size);
@@ -88,19 +90,90 @@ void freeLayer(Layer *layer){
 	free(layer->prev);
 }
 
+void trainNetwork(NeuralNet *net, Matrix *input, Matrix *output, double lr) {
+    if(!net || !net->layers){
+        printf("ERROR in training the network\n");
+        return;
+    }
+
+    Layer *current_layer;
+    //-----------------------------forward propagate--------------------------
+    for(Layer *current_layer = net->layers; current_layer; current_layer=current_layer->next){
+        if(current_layer==net->layers){
+            current_layer->neuron = dot(current_layer->weight, input);
+        }
+        else{
+            current_layer->neuron = dot(current_layer->weight, current_layer->prev->neuron);
+        }
+        current_layer->neuron = add(current_layer->neuron, current_layer->bias);
+        current_layer->pre_activation_neuron = copyMatrix(current_layer->neuron);
+        current_layer->activation_gradient_neuron = copyMatrix(current_layer->neuron);
+
+        activationGradient(current_layer);
+        activateLayer(current_layer); 
+    }
+
+    //-----------------------------backward propagate-------------------------
+    for(current_layer=net->tail_layer; current_layer; current_layer=current_layer->prev){
+        Matrix *previous_layer_transpose = (current_layer->prev)? transpose(current_layer->prev->neuron): transpose(input);
+
+        //if currently at last layer
+        if(current_layer == net->tail_layer){
+            current_layer->error = subtract(output, current_layer->neuron);
+            current_layer->weight_gradient = dot(current_layer->error, previous_layer_transpose);
+            current_layer->weight_gradient = scale(current_layer->weight_gradient, lr);
+            current_layer->bias_gradient = scale(current_layer->error, lr);
+
+            current_layer->weight = subtract(current_layer->weight, current_layer->weight_gradient);
+            current_layer->bias = subtract(current_layer->bias, current_layer->bias_gradient);
+        }
+
+        else{
+            current_layer->error = dot(transpose(current_layer->next->weight), current_layer->next->error);
+            current_layer->error = (current_layer->error, current_layer->activation_gradient_neuron);
+            current_layer->weight_gradient = dot(current_layer->error, previous_layer_transpose);
+            current_layer->weight_gradient = scale(current_layer->weight_gradient, lr);
+            current_layer->bias_gradient = scale(current_layer->error, lr);
+
+            current_layer->weight = subtract(current_layer->weight, current_layer->weight_gradient);
+            current_layer->bias = subtract(current_layer->bias, current_layer->bias_gradient);
+        }
+    }
+
+}
+
+
+void predict(NeuralNet *net, Matrix *input){
+	if(!net || !net->layers){
+        printf("ERROR in training the network\n");
+        return;
+    }
+    for(Layer *current_layer = net->layers; current_layer; current_layer=current_layer->next){
+        if(current_layer==net->layers){
+            current_layer->neuron = dot(current_layer->weight, input);
+        }
+        else{
+            current_layer->neuron = dot(current_layer->weight, current_layer->prev->neuron);
+        }
+        current_layer->neuron = add(current_layer->neuron, current_layer->bias);
+        current_layer->pre_activation_neuron = copyMatrix(current_layer->neuron);
+        current_layer->activation_gradient_neuron = copyMatrix(current_layer->neuron);
+
+        activationGradient(current_layer);
+        activateLayer(current_layer); 
+    }
+	printMatrix(net->tail_layer->neuron);
+}
+
 void activateLayer(Layer *layer){
-	if(strcmp(layer->activation, "sigmoid")==0){
-		layer->neuron = applySigmoid(layer->neuron);
-		return;
-	}
-	else if(strcmp(layer->activation, "ReLU")==0){
-		layer->neuron = applyReLU(layer->neuron);
-		return;
-	}
-	else if(strcmp(layer->activation, "softmax")==0){
-		layer->neuron = applySoftmax(layer->neuron);
-		return;
-	}
+    if(strcmp(layer->activation, "sigmoid")==0){
+        layer->neuron = applySigmoid(layer->neuron);
+        return;
+    }
+    else if(strcmp(layer->activation, "ReLU")==0){
+        layer->neuron = applyReLU(layer->neuron);
+        return;
+    }
 }
 
 Matrix* applyReLU(Matrix *input) {
@@ -124,26 +197,17 @@ Matrix* applySigmoid(Matrix *input) {
     return output;
 }
 
-Matrix* applySoftmax(Matrix *input) {
-    Matrix *output = copyMatrix(input); 
-    double max_val = output->val[0][0]; 
-
-    for (int i = 0; i < output->row; i++) {
-        if (output->val[i][0] > max_val) {
-            max_val = output->val[i][0];
-        }
+void activationGradient(Layer *layer){
+    if(strcmp(layer->activation, "sigmoid")==0){
+        layer->activation_gradient_neuron = gradientSigmoid(layer->neuron);
+        return;
     }
-    double sum = 0.0;
-    for (int i = 0; i < output->row; i++) {
-        output->val[i][0] = (double)exp(output->val[i][0] - max_val);
-        sum += output->val[i][0]; 
+    else if(strcmp(layer->activation, "ReLU")==0){
+        layer->activation_gradient_neuron = gradientReLU(layer->neuron);
+        return;
     }
-
-    for (int i = 0; i < output->row; i++) {
-        output->val[i][0] /= sum; 
-    }
-    return output;
 }
+
 
 Matrix* gradientReLU(Matrix *input) {
     Matrix *gradient = createMatrix(input->row, input->col);
@@ -164,46 +228,6 @@ Matrix* gradientSigmoid(Matrix *input) {
         }
     }
     return gradient;
-}
-
-// Matrix* gradientSoftmax(Matrix *output, int target_index) {
-//        Matrix *gradient = createMatrix(output->row, output->col);
-//        for (int i = 0; i < output->row; i++) {
-//            for (int j = 0; j < output->col; j++) {
-//                if (i == target_index) {
-//                    gradient->val[i][j] = output->val[i][j] * (1 - output->val[i][j]);
-//                } else {
-//                    gradient->val[i][j] = -output->val[i][j] * output->val[target_index][j];
-//                }
-//            }
-//        }
-//        return gradient;
-// }
-
-
-void trainNetwork(NeuralNet *net, Matrix *input, Matrix *output, double lr) {
-    
-}
-
-
-void predict(NeuralNet *net, Matrix *input){
-	if(!net->layers){
-		printf("ERROR : No layers to train\n");
-		return;
-	}
-	Layer *current_layer=net->layers;
-	while(current_layer){
-		if(!current_layer->prev){
-			current_layer->neuron = dot(current_layer->weight, input);
-		}
-		else{
-			current_layer->neuron = dot(current_layer->weight, current_layer->prev->neuron);
-		}
-		current_layer->neuron = add(current_layer->neuron, current_layer->bias);
-		activateLayer(current_layer);
-		current_layer = current_layer->next;
-	}
-	printMatrix(net->tail_layer->neuron);
 }
 
 
