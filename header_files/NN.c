@@ -5,18 +5,13 @@
 #include<string.h>
 #include<math.h>
 
-NeuralNet* buildNetwork(int input_size, char* task){
+NeuralNet* buildNetwork(int input_size){
     if(input_size<=0){
         printf("ERROR : invalid input size\n");
         return NULL;
     }
-    if(strcmp(task, "regression")!=0 && strcmp(task, "classification")!=0){
-        printf("ERROR : undefined task\n");
-        return NULL;
-    }
 	NeuralNet* n = (NeuralNet*)malloc(sizeof(NeuralNet));
 	n->input_size = input_size;
-    strcmp(n->task, task);
 	n->layers = NULL;
 	n->tail_layer = NULL;
 	return n;
@@ -98,7 +93,7 @@ void trainNetwork(NeuralNet *net, Matrix *input, Matrix *output, double lr) {
 
     Layer *current_layer;
     //-----------------------------forward propagate--------------------------
-    for(Layer *current_layer = net->layers; current_layer; current_layer=current_layer->next){
+    for(current_layer = net->layers; current_layer; current_layer=current_layer->next){
         if(current_layer==net->layers){
             current_layer->neuron = dot(current_layer->weight, input);
         }
@@ -130,7 +125,7 @@ void trainNetwork(NeuralNet *net, Matrix *input, Matrix *output, double lr) {
 
         else{
             current_layer->error = dot(transpose(current_layer->next->weight), current_layer->next->error);
-            current_layer->error = (current_layer->error, current_layer->activation_gradient_neuron);
+            current_layer->error = multiply(current_layer->error, current_layer->activation_gradient_neuron);
             current_layer->weight_gradient = dot(current_layer->error, previous_layer_transpose);
             current_layer->weight_gradient = scale(current_layer->weight_gradient, lr);
             current_layer->bias_gradient = scale(current_layer->error, lr);

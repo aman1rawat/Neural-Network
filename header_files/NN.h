@@ -25,7 +25,7 @@ typedef struct{
 	Layer * tail_layer; // pointer to the last layer in the network
 }NeuralNet;
 
-NeuralNet* buildNetwork(int input_size, char *task);
+NeuralNet* buildNetwork(int input_size);
 void addLayer(NeuralNet *net, int size, char * activation);
 void popLayer(NeuralNet *net);
 void freeLayer(Layer *layer);

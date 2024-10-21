@@ -35,35 +35,19 @@ int main() {
     for(int i=0;i<4;i++){
         output[i] = createMatrix(1,1);
     }
-    output[0]->val[0][0] = 1;
+    output[0]->val[0][0] = 2;
     output[1]->val[0][0] = 4;
-    output[2]->val[0][0] = 9;
-    output[3]->val[0][0] = 16;
+    output[2]->val[0][0] = 6;
+    output[3]->val[0][0] = 8;
 
 
-    NeuralNet *net = buildNetwork(1, "regression");
-    addLayer(net, 2, "sigmoid");
+    NeuralNet *net = buildNetwork(1);
+    addLayer(net, 3, "sigmoid");
     addLayer(net, 1, "sigmoid");
-    // if(!net->layers){
-    //     printf("no layers\n");
-    // }
-    // else{
-    //     Layer *t = net->layers;
-    //     while(t){
-    //         printf("Layer info :\n");
-    //         printf("Layer size : %d\n", t->size);
-    //         printf("Layer activation : %s\n", t->activation);
-    //         printf("Layer weights :\n");
-    //         printMatrix(t->weight);
-    //         printMatrix(t->bias);
-    //         printf("\n----------------------------------\n");
-    //         t=t->next;
-    //     }
-    // }
     printf("Layers created\n");
     for(int i=0;i<4;i++){
         printf("\n-----------------iteration %d------------------\n", i);
-        trainNetwork(net, input[i], output[i], lr);
+        trainNetwork(net, input[i%4], output[i%4], lr);
         Layer *t = net->layers;
         LayerInfo(t);
     }
