@@ -1,5 +1,5 @@
-#ifndef UTILITIES_H
-#define UTILITIES_H
+#ifndef MATRIX_H
+#define MATRIX_H
 
 typedef struct{
 	double ** val;
