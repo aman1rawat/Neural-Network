@@ -3,26 +3,26 @@
 #include<string.h>
 #include<math.h>
 
-#include "utilities.h"
+#include "matrix.h"
 #include "NN.h"
 #include "activation.h"
 #include "loss.h"
 
 
-Neuralnetwork* buildnetworkwork(int input_size, char * loss_function){
+NeuralNet* buildNetwork(int input_size, char * loss_function){
     if(input_size<=0){
         printf("ERROR : invalid input size\n");
         return NULL;
     }
-	Neuralnetwork* networkwork = (Neuralnetwork*)malloc(sizeof(Neuralnetwork));
-	networkwork->input_size = input_size;
-	networkwork->layers = NULL;
-	networkwork->tail_layer = NULL;
-    networkwork->loss_function = loss_function;
-	return networkwork;
+	NeuralNet* network = (NeuralNet*)malloc(sizeof(NeuralNet));
+	network->input_size = input_size;
+	network->layers = NULL;
+	network->tail_layer = NULL;
+    strcpy(network->loss_function, loss_function);
+	return network;
 }
 
-void addLayer(Neuralnetwork *network, int size, char *activation) {
+void addLayer(NeuralNet *network, int size, char *activation) {
     Layer *layer = (Layer*)malloc(sizeof(Layer));
     if(!layer){
         printf("ERROR: Failed to allocate layer\n");
@@ -49,14 +49,14 @@ void addLayer(Neuralnetwork *network, int size, char *activation) {
     layer->bias_gradient = NULL;
 
 
-    strcmp(layer->activation, activation);
+    strcpy(layer->activation, activation);
     layer->delta = NULL;
     
     initializeMatrix(layer->weight);
     fillMatrix(layer->bias, 0);
 }
 
-void trainNetwork(Neuralnetwork *network, Matrix *input, Matrix *output, double lr) {
+void trainNetwork(NeuralNet *network, Matrix *input, Matrix *output, double lr) {
     if(!network || !network->layers){
         printf("ERROR in training the networkwork\n");
         return;

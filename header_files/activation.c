@@ -1,6 +1,10 @@
 #include<stdio.h>
 #include<stdlib.h>
+
+#include "matrix.h"
+#include "NN.h"
 #include "activation.h"
+#include "loss.h"
 
 Matrix* activate(Layer *layer){
     if(strcmp(layer->activation, "sigmoid")==0){

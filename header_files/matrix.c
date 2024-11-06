@@ -1,8 +1,12 @@
-#include "utilities.h"
 #include<stdio.h>
 #include<stdlib.h>
 #include<math.h>
 #include<time.h>
+
+#include "matrix.h"
+#include "NN.h"
+#include "activation.h"
+#include "loss.h"
 
 Matrix * createMatrix(int row, int col) {
     Matrix *matrix = (Matrix*)malloc(sizeof(Matrix));  // Allocate for one Matrix struct

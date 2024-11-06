@@ -4,7 +4,6 @@
 #include "matrix.h"
 #include "NN.h"
 
-
 Matrix* get_loss_gradient(NeuralNet *network, Matrix *output);
 
 #endif

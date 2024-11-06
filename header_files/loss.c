@@ -1,8 +1,10 @@
 #include<stdio.h>
 #include<stdlib.h>
-#include "loss.h"
+
 #include "matrix.h"
 #include "NN.h"
+#include "activation.h"
+#include "loss.h"
 
 Matrix* get_loss_gradient(NeuralNet *network, Matrix *output){
 	if(strcmp(network->loss_function,"MSE")==0){
